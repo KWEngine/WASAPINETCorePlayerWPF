@@ -5,15 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WASAPINETCore"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <Button x:Name="btnPlay" Content="Button" Margin="0,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0" Click="btnPlay_Click"/>
+        <Label x:Name="lblBytes" Content="" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
 
     </Grid>
 </Window>

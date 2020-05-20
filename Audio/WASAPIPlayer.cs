@@ -40,6 +40,22 @@ namespace WASAPINETCore.Audio
             _waveProvider.CloseStream();
         }
 
+        public bool IsPlaying
+        {
+            get
+            {
+                return _device != null && _device.PlaybackState == PlaybackState.Playing;
+            }
+        }
+
+        public void Stop()
+        {
+            if (IsPlaying)
+            {
+                _device.Stop();
+            }
+        }
+
         public bool OpenWaveFile(string file)
         {
             if(_waveProvider != null)
@@ -55,7 +71,7 @@ namespace WASAPINETCore.Audio
                     _device.Dispose();
                     _device = null;
                 }
-                _device = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 50);
+                _device = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 100);
                 _device.PlaybackStopped += _device_PlaybackStopped;
 
                 _device.Init(_waveProvider);

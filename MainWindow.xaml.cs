@@ -38,6 +38,17 @@ namespace WASAPINETCore
 
         private void _player_Buffering(object sender, BufferingEventArgs e)
         {
+            try
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    lblBytes.Content = e.Count;
+                });
+            }
+            catch (Exception)
+            {
+
+            }
             
         }
 
@@ -52,6 +63,15 @@ namespace WASAPINETCore
             else
             {
                 MessageBox.Show("Cannot open file.", "Error during playback", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (_player.IsPlaying)
+            {
+                _player.Stop();
+                
             }
         }
     }
