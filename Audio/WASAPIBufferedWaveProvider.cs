@@ -57,7 +57,12 @@ namespace WASAPINETCore.Audio
         {
             if (_reader != null) {
                 int read = _reader.Read(buffer,offset,count);
-                _player.OnBuffering(buffer, read, _reader.WaveFormat);
+                if (read > 0)
+                {
+                    BufferingResults.Count = read;
+                    BufferingResults.Data = buffer;
+                    BufferingResults.Format = _reader.WaveFormat;
+                }
                 return read;
             }
             return 0;

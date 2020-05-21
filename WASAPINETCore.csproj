@@ -4,14 +4,23 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="1.10.0" />
+    <PackageReference Include="OpenTK" Version="3.2.0" />
+    <PackageReference Include="OpenTK.GLControl" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="Samples\gameover.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Samples\sinewave_8_mono.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Samples\sinewave_mono.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Samples\superstring_8bit_44100hz_stereo.wav">

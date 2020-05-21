@@ -6,33 +6,22 @@ using NAudio;
 using NAudio.FileFormats;
 using NAudio.CoreAudioApi.Interfaces;
 using NAudio.Wave;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace WASAPINETCore.Audio
 {
     class WASAPIPlayer 
     {
         private WasapiOut _device = null;
-        public delegate void BufferingEventHandler(object sender, BufferingEventArgs e);
-        public event BufferingEventHandler Buffering;
         public event EventHandler PlaybackStopped;
         private WASAPIBufferedWaveProvider _waveProvider;
+        private long _positionOnPause = 0;
 
         private void OnPlaybackStopped()
         {
             EventHandler handler = PlaybackStopped;
             if (handler != null) handler(this, EventArgs.Empty);
         }
-
-        public void OnBuffering(byte[] bufferData, int count, WaveFormat format)
-        {
-            BufferingEventHandler handler = Buffering;
-            BufferingEventArgs args = new BufferingEventArgs();
-            args.Data = bufferData;
-            args.Count = count;
-            args.Format = format;
-
-            if (handler != null) handler(this, args);
-        }      
 
         private void _device_PlaybackStopped(object sender, StoppedEventArgs e)
         {
@@ -44,7 +33,7 @@ namespace WASAPINETCore.Audio
         {
             get
             {
-                return _device != null && _device.PlaybackState == PlaybackState.Playing;
+                return _device != null && (_device.PlaybackState == PlaybackState.Playing || _device.PlaybackState == PlaybackState.Paused);
             }
         }
 
@@ -52,6 +41,15 @@ namespace WASAPINETCore.Audio
         {
             if (IsPlaying)
             {
+                _device.Stop();
+            }
+        }
+
+        public void Pause()
+        {
+            if (IsPlaying)
+            {
+                _positionOnPause = _device.GetPosition();
                 _device.Stop();
             }
         }
@@ -84,7 +82,11 @@ namespace WASAPINETCore.Audio
 
         public void Play()
         {
-            _device.Play();
+            if (!IsPlaying)
+            {
+                _device.Play();
+                _positionOnPause = 0;
+            }
         }
     }
 }
