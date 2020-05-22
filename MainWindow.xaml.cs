@@ -1,4 +1,7 @@
 ﻿using NAudio.Wave;
+using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL4;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +19,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using WASAPINETCore.Audio;
+using WASAPINETCore.OpenGL;
 
 namespace WASAPINETCore
 {
@@ -24,10 +28,18 @@ namespace WASAPINETCore
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Audio fields:
         private WASAPIPlayer _player = null;
         private DispatcherTimer _timer;
-        private WaveBuffer _waveBuffer;
-        private byte[] _currentWaveData = null;
+        private LomontFFT _fft;
+
+        // OpenGL fields:
+        private Matrix4 _pMatrix = Matrix4.Identity;
+        private Matrix4 _vMatrix = Matrix4.LookAt(0, 0, 1, 0, 0, 0, 0, 1, 0);
+        private Matrix4 _vpMatrix = Matrix4.Identity;
+        private Renderer _renderer = null;
+        private float _glWidth = 100f;
+        private float _glHeight = 100f;
 
 
         public MainWindow()
@@ -40,10 +52,12 @@ namespace WASAPINETCore
             _timer.Interval = new TimeSpan(0, 0, 0, 0, 16);
             _timer.Tick += _ticker_Tick;
 
-
-            
+            _fft = new LomontFFT();
+            _fft.A = 0;
+            _fft.B = 1;
         }
 
+        
         private void _ticker_Tick(object sender, EventArgs e)
         {
             if (_player.IsPlaying)
@@ -54,13 +68,20 @@ namespace WASAPINETCore
                     byte[] data = BufferingResults.Data;
                     WaveFormat wf = BufferingResults.Format;
 
+                    double[] dData = AudioConverter.ConvertToMonoDoubleFFTArray(data, wf);
+                    _fft.FFT(dData, true);
 
-                    
+                    double[] fftResult = new double[dData.Length / 2];
 
-                   
-                    
+                    for(int i = 0, j = 0; i < dData.Length / 2; i+=2, j += 2)
+                    {
+                        fftResult[j] = i * wf.SampleRate / 2.0 / (dData.Length / 2);
+                        fftResult[j + 1] = Math.Sqrt(dData[i] * dData[i] + dData[i + 1] * dData[i + 1]);
+                    }
+                    _renderer.SetFFTData(fftResult);
 
 
+                    glControl.Invalidate();
                     lblBytes.Content = "" + c;
                 }
             }
@@ -78,7 +99,7 @@ namespace WASAPINETCore
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
-            bool result = _player.OpenWaveFile(@".\Samples\sinewave_8_mono.wav");
+            bool result = _player.OpenWaveFile(@".\Samples\gameover.wav");
             if (result)
             {
                 btnPlay.IsEnabled = false;
@@ -109,6 +130,36 @@ namespace WASAPINETCore
             }
         }
 
-        
+        private void glControl_Load(object sender, EventArgs e)
+        {
+            GL.ClearColor(0f, 0f, 0f, 1f);
+            _renderer = new Renderer();
+        }
+
+        private void glControl_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+        {
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            _renderer.Draw(ref _vpMatrix, _glWidth, _glHeight);
+
+            glControl.SwapBuffers();
+        }
+
+        private void glControlHost_Initialized(object sender, EventArgs e)
+        {
+            glControl.MakeCurrent();
+        }
+
+        private void glControl_Resize(object sender, EventArgs e)
+        {
+            GL.Viewport(0, 0, glControl.Width, glControl.Height);
+            //_pMatrix = Matrix4.CreateOrthographic(glControl.Width, glControl.Height, 0, 100);
+
+            _glWidth = 100f;
+            _glHeight = 100f * (glControl.Height / (float)glControl.Width);
+
+            _pMatrix = Matrix4.CreateOrthographic(_glWidth, _glHeight, 0, 100);
+            _vpMatrix = _vMatrix * _pMatrix;
+        }
     }
 }

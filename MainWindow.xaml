@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WASAPINETCore"
+        xmlns:opentk="clr-namespace:OpenTK;assembly=OpenTK.GLControl"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
     <Grid>
@@ -16,9 +17,11 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <Button x:Name="btnPlay" Content="Play" Margin="0,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0" Click="btnPlay_Click"/>
-        <Button x:Name="btnPause" Content="Pause" Margin="0,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="1" Click="btnPause_Click"/>
+        <Button x:Name="btnPause" Content="Stop" Margin="0,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="1" Click="btnPause_Click"/>
         <Label x:Name="lblBytes" Content="" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
-        <WindowsFormsHost x:Name="glControl" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,0,0" Grid.Row="1" VerticalAlignment="Stretch"/>
+        <WindowsFormsHost x:Name="glControlHost" Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,0,0,0" Grid.Row="1" VerticalAlignment="Stretch" Initialized="glControlHost_Initialized">
+            <opentk:GLControl x:Name="glControl" Load="glControl_Load" Paint="glControl_Paint" Resize="glControl_Resize"/>
+        </WindowsFormsHost>
 
     </Grid>
 </Window>
