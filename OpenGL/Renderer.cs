@@ -121,9 +121,9 @@ namespace WASAPINETCore.OpenGL
             {
                 numberOfBins = _fft.Length / 2 - 2;
                 int bins2 = numberOfBins * 2;
-                step = width / (20 - 1);
+                step = width / (20 - 0);
                 beginning = (-width / 2f) + (step / 2f);
-                int binsPerSuperBin = numberOfBins / 2 / 20;
+                int binsPerSuperBin = numberOfBins / 20;
                 if (binsPerSuperBin < 1)
                 {
                     return;
@@ -135,7 +135,7 @@ namespace WASAPINETCore.OpenGL
                 {
                     float h = Math.Clamp(100 + (20f * (float)Math.Log10(_fft[i + 1] / (numberOfBins * 0.5f))), 0f, 100f);
                     currentSum += h;
-                    if (j % binsPerSuperBin == 0)
+                    if (j > 0 && j % binsPerSuperBin == 0)
                     {
                         float avg = currentSum / binsPerSuperBin;
                         heights[b] = avg;
@@ -154,7 +154,7 @@ namespace WASAPINETCore.OpenGL
         {
             PrepareDataForDrawing(width, out float step, out int numberOfBins, out float[] heights, out float beginning);
 
-            GL.Uniform1(_uniformBinWidth, 100f / 20f);
+            GL.Uniform1(_uniformBinWidth, 100f / (20f + 1f));
             GL.Uniform1(_uniformStep, step);
             GL.Uniform1(_uniformWindowHeight, -height / 2f);
             GL.Uniform1(_uniformBinOffset, beginning);
