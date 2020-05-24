@@ -111,7 +111,7 @@ namespace WASAPINETCore
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
-            bool result = _player.OpenWaveFile(@".\Samples\superstring_8bit_44100hz_stereo.wav");
+            bool result = _player.OpenWaveFile(@".\Samples\sweep_16_mono.wav");
             if (result)
             {
                 btnPlay.IsEnabled = false;

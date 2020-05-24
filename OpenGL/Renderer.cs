@@ -138,7 +138,7 @@ namespace WASAPINETCore.OpenGL
                     if (j % binsPerSuperBin == 0)
                     {
                         float avg = currentSum / binsPerSuperBin;
-                        heights[b] = h;
+                        heights[b] = avg;
                         b++;
                         currentSum = 0;
                         if (b >= 20)
