@@ -14,9 +14,6 @@ uniform float uStep;
 
 mat4 createModelMatrix()
 {
-	//return mat4(1.0); 
-	
-	
 	return mat4(
 		uBinWidth, 0.0, 0.0, 0.0,
 		0.0, uHeight[gl_InstanceID] / 2.0, 0.0, 0.0,
@@ -28,7 +25,6 @@ mat4 createModelMatrix()
 
 void main()
 {
-	mat4 model = createModelMatrix();
-	vHeight = uHeight[gl_InstanceID] / 2.0 / 100.0;
-	gl_Position = uVP * model * vec4(aPosition, 1.0);
+	vHeight = uHeight[gl_InstanceID] / 100.0;
+	gl_Position = uVP * createModelMatrix() * vec4(aPosition, 1.0);
 }

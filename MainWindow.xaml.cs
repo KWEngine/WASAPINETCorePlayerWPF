@@ -88,6 +88,10 @@ namespace WASAPINETCore
                         }
                         _renderer.SetFFTData(fftResult);
                     }
+                    else
+                    {
+                        _renderer.ReduceCurrentFFTData();
+                    }
 
                     glControl.Invalidate();
                 }

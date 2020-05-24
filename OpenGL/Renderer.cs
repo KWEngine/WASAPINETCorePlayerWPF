@@ -31,6 +31,17 @@ namespace WASAPINETCore.OpenGL
             _fft = data;
         }
 
+        public void ReduceCurrentFFTData()
+        {
+            if(_fft != null)
+            {
+                for (int i = 0; i < _fft.Length; i += 2)
+                {
+                    _fft[i + 1] /= 2.0;
+                }
+            }
+        }
+
         public Renderer()
         {
             _program = GL.CreateProgram();
@@ -99,49 +110,61 @@ namespace WASAPINETCore.OpenGL
             return address;
         }
 
-        public void Draw(ref Matrix4 viewProjection, float width, float height)
+        private void PrepareDataForDrawing(float width, out float step, out int numberOfBins, out float[] heights, out float beginning )
         {
+            step = 0;
+            heights = new float[20];
+            numberOfBins = 0;
+            beginning = 0;
+
             if (_fft != null)
             {
-                int numberOfBins = _fft.Length / 2 - 2;
+                numberOfBins = _fft.Length / 2 - 2;
                 int bins2 = numberOfBins * 2;
-                float step = width / (20 - 1);
-                float beginning = (-width / 2f) + (step / 2f);
-                float[] heights = new float[20];
+                step = width / (20 - 1);
+                beginning = (-width / 2f) + (step / 2f);
                 int binsPerSuperBin = numberOfBins / 2 / 20;
                 if (binsPerSuperBin < 1)
+                {
                     return;
+                }
+                    
 
                 float currentSum = 0;
-                for (int i = 2, j = 0, b = 0; i < bins2; i+=2, j++)
+                for (int i = 2, j = 0, b = 0; i < bins2; i += 2, j++)
                 {
                     float h = Math.Clamp(100 + (20f * (float)Math.Log10(_fft[i + 1] / (numberOfBins * 0.5f))), 0f, 100f);
                     currentSum += h;
-                    if(j % binsPerSuperBin == 0)
+                    if (j % binsPerSuperBin == 0)
                     {
                         float avg = currentSum / binsPerSuperBin;
                         heights[b] = h;
                         b++;
                         currentSum = 0;
-                        if(b >= 20)
+                        if (b >= 20)
                         {
                             break;
                         }
                     }
                 }
-
-                
-                GL.Uniform1(_uniformBinWidth, 100f / 20f);
-                GL.Uniform1(_uniformStep, step);
-                GL.Uniform1(_uniformWindowHeight, -height / 2f);
-                GL.Uniform1(_uniformBinOffset, beginning);
-                GL.UniformMatrix4(_uniformVP, false, ref viewProjection);
-                GL.Uniform1(_uniformHeight, 20, heights);
-
-                GL.BindVertexArray(_quad.GetId());
-                GL.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, numberOfBins);
-                GL.BindVertexArray(0);
             }
+        }
+
+        public void Draw(ref Matrix4 viewProjection, float width, float height)
+        {
+            PrepareDataForDrawing(width, out float step, out int numberOfBins, out float[] heights, out float beginning);
+
+            GL.Uniform1(_uniformBinWidth, 100f / 20f);
+            GL.Uniform1(_uniformStep, step);
+            GL.Uniform1(_uniformWindowHeight, -height / 2f);
+            GL.Uniform1(_uniformBinOffset, beginning);
+            GL.UniformMatrix4(_uniformVP, false, ref viewProjection);
+            GL.Uniform1(_uniformHeight, 20, heights);
+
+            GL.BindVertexArray(_quad.GetId());
+            GL.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, numberOfBins);
+            GL.BindVertexArray(0);
+            
         }
     }
 }
