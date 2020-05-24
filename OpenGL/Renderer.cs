@@ -133,13 +133,11 @@ namespace WASAPINETCore.OpenGL
                 float currentSum = 0;
                 for (int i = 2, j = 0, b = 0; i < bins2; i += 2, j++)
                 {
-                    float h = Math.Clamp(100 + (20f * (float)Math.Log10(_fft[i + 1] / (numberOfBins * 0.5f))), 0f, 100f);
+                    float h = 100 + (20f * (float)Math.Log10(_fft[i + 1] / (numberOfBins * 0.5f)));
                     currentSum += h;
                     if (j > 0 && j % binsPerSuperBin == 0)
                     {
-                        float avg = currentSum / binsPerSuperBin;
-                        heights[b] = avg;
-                        b++;
+                        heights[b++] = Math.Clamp(currentSum / binsPerSuperBin, 0f, 100f); 
                         currentSum = 0;
                         if (b >= 20)
                         {
