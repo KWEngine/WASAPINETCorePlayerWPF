@@ -172,5 +172,10 @@ namespace WASAPINETCore
             _pMatrix = Matrix4.CreateOrthographic(_glWidth, _glHeight, 0, 100);
             _vpMatrix = _vMatrix * _pMatrix;
         }
+
+        private void btnOpen_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
