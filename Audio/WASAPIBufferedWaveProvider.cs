@@ -1,6 +1,7 @@
 ﻿using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -12,6 +13,7 @@ namespace WASAPINETCore.Audio
         private WaveFileReader _reader = null;
         private FileStream _stream = null;
         private WASAPIPlayer _player = null;
+        
 
         public WASAPIBufferedWaveProvider(WASAPIPlayer player, string file)
         {
@@ -55,13 +57,16 @@ namespace WASAPINETCore.Audio
 
         public int Read(byte[] buffer, int offset, int count)
         {
-            if (_reader != null) {
+            if (_reader != null)
+            { 
                 int read = _reader.Read(buffer,offset,count);
+                uint ms = (uint)Global.Watch.ElapsedMilliseconds;
                 if (read > 0)
                 {
                     BufferingResults.Count = read;
                     BufferingResults.Data = buffer;
                     BufferingResults.Format = _reader.WaveFormat;
+                    BufferingResults.Timestamp = ms;
                 }
                 return read;
             }

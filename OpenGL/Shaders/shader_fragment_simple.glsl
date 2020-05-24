@@ -1,5 +1,7 @@
 ﻿#version 330
 
+in float vHeight;
+
 uniform vec3 uBaseColor;
 
 out vec4 color;
@@ -7,6 +9,7 @@ out vec4 color;
 
 void main()
 {
-	color = vec4(uBaseColor, 1.0);
+	vec3 tmpColor = vec3(uBaseColor.x * vHeight, uBaseColor.y * vHeight, 0.0);
+	color = vec4(tmpColor, 1.0);
 	//bloom = vec4(0.0);
 }

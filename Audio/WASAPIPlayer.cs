@@ -7,6 +7,7 @@ using NAudio.FileFormats;
 using NAudio.CoreAudioApi.Interfaces;
 using NAudio.Wave;
 using System.Runtime.InteropServices.ComTypes;
+using System.Diagnostics;
 
 namespace WASAPINETCore.Audio
 {
@@ -69,7 +70,7 @@ namespace WASAPINETCore.Audio
                     _device.Dispose();
                     _device = null;
                 }
-                _device = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 100);
+                _device = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 50);
                 _device.PlaybackStopped += _device_PlaybackStopped;
 
                 _device.Init(_waveProvider);

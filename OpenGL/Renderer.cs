@@ -1,8 +1,11 @@
-﻿using OpenTK;
+﻿using NAudio.Wave;
+using OpenTK;
 using OpenTK.Graphics.OpenGL4;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Windows.Documents;
 
 namespace WASAPINETCore.OpenGL
 {
@@ -12,8 +15,13 @@ namespace WASAPINETCore.OpenGL
         private int _vertexProgram = -1;
         private int _fragmentProgram = -1;
 
-        private int _uniformMVP = -1;
+        private int _uniformVP = -1;
         private int _uniformBaseColor = -1;
+        private int _uniformHeight = -1;
+        private int _uniformWindowHeight = -1;
+        private int _uniformBinOffset = -1;
+        private int _uniformBinWidth = -1;
+        private int _uniformStep = -1;
 
         private Quad _quad;
         private double[] _fft;
@@ -54,8 +62,14 @@ namespace WASAPINETCore.OpenGL
             }
 
 
-            _uniformMVP = GL.GetUniformLocation(_program, "uMVP");
+            //_uniformMVP = GL.GetUniformLocation(_program, "uMVP");
+            _uniformVP = GL.GetUniformLocation(_program, "uVP");
             _uniformBaseColor = GL.GetUniformLocation(_program, "uBaseColor");
+            _uniformHeight = GL.GetUniformLocation(_program, "uHeight");
+            _uniformWindowHeight = GL.GetUniformLocation(_program, "uWindowHeight");
+            _uniformBinOffset = GL.GetUniformLocation(_program, "uBinOffset");
+            _uniformBinWidth = GL.GetUniformLocation(_program, "uBinWidth");
+            _uniformStep = GL.GetUniformLocation(_program, "uStep");
 
             GL.UseProgram(_program);
 
@@ -89,26 +103,43 @@ namespace WASAPINETCore.OpenGL
         {
             if (_fft != null)
             {
-                GL.BindVertexArray(_quad.GetId());
                 int numberOfBins = _fft.Length / 2 - 2;
-                float j = -100;
-                float step = (width * 2) / numberOfBins;
-                for (int i = 2; i < numberOfBins; i++)
+                int bins2 = numberOfBins * 2;
+                float step = width / (20 - 1);
+                float beginning = (-width / 2f) + (step / 2f);
+                float[] heights = new float[20];
+                int binsPerSuperBin = numberOfBins / 2 / 20;
+                if (binsPerSuperBin < 1)
+                    return;
+
+                float currentSum = 0;
+                for (int i = 2, j = 0, b = 0; i < bins2; i+=2, j++)
                 {
-                    float h = ((float)_fft[i * 2 + 1]) * 10f;
-                    Matrix4 model = Matrix4.CreateScale(0.5f, h, 1f);
-                    model[3, 0] = j;
-                    model[3, 1] = -height / 2;
-                    Matrix4 mvp = model * viewProjection;
-                    GL.UniformMatrix4(_uniformMVP, false, ref mvp);
-
-                    GL.Uniform3(_uniformBaseColor, 1f, 1f, 1f);
-
-                    GL.DrawArrays(PrimitiveType.Quads, 0, 4);
-
-                    j += step;
+                    float h = Math.Clamp(100 + (20f * (float)Math.Log10(_fft[i + 1] / (numberOfBins * 0.5f))), 0f, 100f);
+                    currentSum += h;
+                    if(j % binsPerSuperBin == 0)
+                    {
+                        float avg = currentSum / binsPerSuperBin;
+                        heights[b] = h;
+                        b++;
+                        currentSum = 0;
+                        if(b >= 20)
+                        {
+                            break;
+                        }
+                    }
                 }
 
+                
+                GL.Uniform1(_uniformBinWidth, 100f / 20f);
+                GL.Uniform1(_uniformStep, step);
+                GL.Uniform1(_uniformWindowHeight, -height / 2f);
+                GL.Uniform1(_uniformBinOffset, beginning);
+                GL.UniformMatrix4(_uniformVP, false, ref viewProjection);
+                GL.Uniform1(_uniformHeight, 20, heights);
+
+                GL.BindVertexArray(_quad.GetId());
+                GL.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, numberOfBins);
                 GL.BindVertexArray(0);
             }
         }

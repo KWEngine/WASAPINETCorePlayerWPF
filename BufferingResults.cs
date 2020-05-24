@@ -10,5 +10,6 @@ namespace WASAPINETCore
         public static volatile byte[] Data;
         public static volatile int Count;
         public static volatile WaveFormat Format;
+        public static volatile uint Timestamp;
     }
 }
