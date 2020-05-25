@@ -206,6 +206,7 @@ namespace WASAPINETCore
                 }
                 else
                 {
+                    tbFilename.Text = "";
                     btnPlay.IsEnabled = false;
                     btnPause.IsEnabled = false;
                 }

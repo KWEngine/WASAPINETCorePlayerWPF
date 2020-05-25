@@ -84,6 +84,8 @@ namespace WASAPINETCore.Audio
                 {
                     wStream = new WaveFileReader(file);
                 }
+                else
+                    throw new Exception("Invalid file type: only mp3 and wav are supported.");
 
                 
                 _waveProvider = new WASAPIBufferedWaveProvider(wStream);
