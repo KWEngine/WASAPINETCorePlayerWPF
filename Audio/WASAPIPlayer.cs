@@ -109,9 +109,9 @@ namespace WASAPINETCore.Audio
                     return fd;
                 }
             }
-            catch(Exception)
+            catch(Exception ex)
             {
-
+                throw new Exception(ex.Message);
             }
 
             return null;
