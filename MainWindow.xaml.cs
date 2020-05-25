@@ -1,4 +1,5 @@
-﻿using NAudio.Wave;
+﻿using Microsoft.Win32;
+using NAudio.Wave;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
@@ -65,7 +66,6 @@ namespace WASAPINETCore
         
         private void _ticker_Tick(object sender, EventArgs e)
         {
-            
             if (_player.IsPlaying)
             {
                 if (BufferingResults.Data != null)
@@ -98,7 +98,12 @@ namespace WASAPINETCore
             }
             else
             {
-                //lblBytes.Content = "";
+                bool result = _renderer.ReduceCurrentFFTData();
+                glControl.Invalidate();
+                if (!result)
+                {
+                    _timer.Stop();
+                }
             }
             _lastUpdate = Global.Watch.ElapsedMilliseconds;
         }
@@ -106,45 +111,50 @@ namespace WASAPINETCore
         private void _player_PlaybackStopped(object sender, EventArgs e)
         {
             btnPlay.IsEnabled = true;
-            _timer.Stop();
+            btnPause.IsEnabled = false;
         }
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
-            bool result = _player.OpenWaveFile(@".\Samples\superstring_8bit_44100hz_stereo.wav");
-            if (result)
-            {
-                btnPlay.IsEnabled = false;
-                _timer.Start();
-                _player.Play();
-            }
-            else
-            {
-                MessageBox.Show("Cannot open file.", "Error during playback", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            Play();
+        }
+
+        private void Play()
+        {
+            btnPlay.IsEnabled = false;
+            btnPause.IsEnabled = true;
+            _timer.Start();
+            _player.Play();
         }
 
         private void btnPause_Click(object sender, RoutedEventArgs e)
         {
-            if (_player.IsPlaying)
-            {
-                _timer.Stop();
-                _player.Pause();
-            }
+            Pause();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (_player.IsPlaying)
+            if (_player.IsPlaying || _player.IsPaused)
             {
                 _timer.Stop();
                 _player.Stop();
             }
         }
 
+        private void Pause()
+        {
+            if (_player.IsPlaying)
+            {
+                _timer.Stop();
+                _player.Pause();
+                btnPause.IsEnabled = false;
+                btnPlay.IsEnabled = true;
+            }
+        }
+
         private void glControl_Load(object sender, EventArgs e)
         {
-            GL.ClearColor(0f, 0f, 0f, 1f);
+            GL.ClearColor(0.1f, 0.1f, 0.1f, 1f);
             _renderer = new Renderer();
         }
 
@@ -175,7 +185,33 @@ namespace WASAPINETCore
 
         private void btnOpen_Click(object sender, RoutedEventArgs e)
         {
+            OpenFileDialog fd = new OpenFileDialog();
+            bool? result = fd.ShowDialog(this);
+            if(result != null && result == true)
+            {
+                tbFilename.Text = fd.FileName;
+                FileDetails fileLoaded = _player.OpenWaveFile(tbFilename.Text.Trim());
+                if (fileLoaded != null)
+                {
+                    lblArtistFill.Content = fileLoaded.Artist;
+                    lblTitleFill.Content = fileLoaded.Title;
+                    lblAlbumFill.Content = fileLoaded.Album;
 
+                    if (fileLoaded.StreamOK)
+                    {
+                        btnPlay.IsEnabled = true;
+                        btnPause.IsEnabled = false;
+                        return;
+                    }
+                }
+                else
+                {
+                    btnPlay.IsEnabled = false;
+                    btnPause.IsEnabled = false;
+                }
+                MessageBox.Show("Cannot open file.", "Error during playback", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            }
         }
     }
 }

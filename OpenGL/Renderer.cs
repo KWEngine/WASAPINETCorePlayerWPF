@@ -31,15 +31,21 @@ namespace WASAPINETCore.OpenGL
             _fft = data;
         }
 
-        public void ReduceCurrentFFTData()
+        public bool ReduceCurrentFFTData()
         {
+            bool result = false;
             if(_fft != null)
             {
                 for (int i = 0; i < _fft.Length; i += 2)
                 {
                     _fft[i + 1] *= 0.75;
+                    if(!result && Math.Round(_fft[i + 1], 2) > 0)
+                    {
+                        result = true;
+                    }
                 }
             }
+            return result;
         }
 
         public Renderer()

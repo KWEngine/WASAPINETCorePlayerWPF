@@ -11,7 +11,7 @@ namespace WASAPINETCore.OpenGL
         private int _vao = -1;
         private int _vboVertices = -1;
         private int _vboNormals = -1;
-        private int _vboUVs = -1;
+        //private int _vboUVs = -1;
 
         private static float[] Vertices = new float[]
         {

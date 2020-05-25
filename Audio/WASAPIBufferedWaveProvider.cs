@@ -10,19 +10,18 @@ namespace WASAPINETCore.Audio
     class WASAPIBufferedWaveProvider : IWaveProvider, IDisposable
     {
         private WaveFormat _waveFormat = null;
-        private WaveFileReader _reader = null;
-        private FileStream _stream = null;
-        private WASAPIPlayer _player = null;
-        
+        private WaveStream _waveStream = null;
 
-        public WASAPIBufferedWaveProvider(WASAPIPlayer player, string file)
+        public WASAPIBufferedWaveProvider(WaveStream stream)
         {
-            _player = player;
-            _stream = new FileStream(file, FileMode.Open);
-            _reader = new WaveFileReader(_stream);
-            if (_reader != null)
+            _waveStream = stream;
+            if (_waveStream != null)
             {
-                _waveFormat = _reader.WaveFormat;
+                _waveFormat = _waveStream.WaveFormat;
+                if (_waveFormat.BitsPerSample != 8 && _waveFormat.BitsPerSample != 16)
+                {
+                    throw new Exception("Invalid bit depth. File must be @ 8 or 16 bits per sample.");
+                }
             }
             else
             {
@@ -30,11 +29,16 @@ namespace WASAPINETCore.Audio
             }
         }
 
+        public void ResetStream()
+        {
+            _waveStream.Position = 0;
+        }
+
         public void CloseStream()
         {
-            if(_stream != null)
+            if(_waveStream != null)
             {
-                _stream.Close();
+                _waveStream.Close();
             }
         }
 
@@ -48,24 +52,20 @@ namespace WASAPINETCore.Audio
 
         public void Dispose()
         {
-            if (_reader != null)
-            {
-                _reader.Close();
-                CloseStream();
-            }
+            CloseStream();
         }
 
         public int Read(byte[] buffer, int offset, int count)
         {
-            if (_reader != null)
-            { 
-                int read = _reader.Read(buffer,offset,count);
+            if (_waveStream != null)
+            {
+                int read = _waveStream.Read(buffer,offset,count);
                 uint ms = (uint)Global.Watch.ElapsedMilliseconds;
                 if (read > 0)
                 {
                     BufferingResults.Count = read;
                     BufferingResults.Data = buffer;
-                    BufferingResults.Format = _reader.WaveFormat;
+                    BufferingResults.Format = _waveStream.WaveFormat;
                     BufferingResults.Timestamp = ms;
                 }
                 return read;

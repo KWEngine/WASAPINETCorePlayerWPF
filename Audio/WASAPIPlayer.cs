@@ -16,7 +16,6 @@ namespace WASAPINETCore.Audio
         private WasapiOut _device = null;
         public event EventHandler PlaybackStopped;
         private WASAPIBufferedWaveProvider _waveProvider;
-        private long _positionOnPause = 0;
 
         private void OnPlaybackStopped()
         {
@@ -27,14 +26,22 @@ namespace WASAPINETCore.Audio
         private void _device_PlaybackStopped(object sender, StoppedEventArgs e)
         {
             OnPlaybackStopped();
-            _waveProvider.CloseStream();
+            _waveProvider.ResetStream();
         }
 
         public bool IsPlaying
         {
             get
             {
-                return _device != null && (_device.PlaybackState == PlaybackState.Playing || _device.PlaybackState == PlaybackState.Paused);
+                return _device != null && _device.PlaybackState == PlaybackState.Playing;
+            }
+        }
+
+        public bool IsPaused
+        {
+            get
+            {
+                return _device != null && _device.PlaybackState == PlaybackState.Paused;
             }
         }
 
@@ -50,35 +57,70 @@ namespace WASAPINETCore.Audio
         {
             if (IsPlaying)
             {
-                _positionOnPause = _device.GetPosition();
-                _device.Stop();
+                _device.Pause();
             }
         }
 
-        public bool OpenWaveFile(string file)
+        public FileDetails OpenWaveFile(string file)
         {
-            if(_waveProvider != null)
+            if (_device != null)
             {
-                _waveProvider.Dispose();
+                _device.Dispose();
+                _device = null;
             }
-            _waveProvider = new WASAPIBufferedWaveProvider(this, file);
 
             if (_waveProvider != null)
             {
-                if (_device != null)
+                _waveProvider.Dispose();
+            }
+            try
+            {
+                WaveStream wStream = null;
+                if (file.ToLower().EndsWith("mp3"))
                 {
-                    _device.Dispose();
-                    _device = null;
+                    wStream = new Mp3FileReader(file);
                 }
-                _device = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 50);
-                _device.PlaybackStopped += _device_PlaybackStopped;
+                else if (file.ToLower().EndsWith("wav"))
+                {
+                    wStream = new WaveFileReader(file);
+                }
 
-                _device.Init(_waveProvider);
                 
-                return true;
+                _waveProvider = new WASAPIBufferedWaveProvider(wStream);
+
+                if (_waveProvider != null)
+                {
+
+
+                    _device = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 50);
+                    _device.PlaybackStopped += _device_PlaybackStopped;
+                    _device.Init(_waveProvider);
+
+                    FileDetails fd = ReadTagsFromFile(file);
+                    fd.StreamOK = true;
+                    return fd;
+                }
+            }
+            catch(Exception)
+            {
+
             }
 
-            return false;
+            return null;
+        }
+
+        private FileDetails ReadTagsFromFile(string file)
+        {
+            try
+            {
+                TagLib.File fileData = TagLib.File.Create(file);
+                FileDetails fd = new FileDetails(fileData.Tag.FirstPerformer, fileData.Tag.Title, fileData.Tag.Album);
+                return fd;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public void Play()
@@ -86,7 +128,6 @@ namespace WASAPINETCore.Audio
             if (!IsPlaying)
             {
                 _device.Play();
-                _positionOnPause = 0;
             }
         }
     }
