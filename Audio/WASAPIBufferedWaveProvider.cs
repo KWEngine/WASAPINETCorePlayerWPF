@@ -31,7 +31,15 @@ namespace WASAPINETCore.Audio
 
         public void ResetStream()
         {
-            _waveStream.Position = 0;
+            try
+            {
+                _waveStream.Position = 0;
+            }
+            catch (Exception)
+            {
+
+            }
+            
         }
 
         public void CloseStream()

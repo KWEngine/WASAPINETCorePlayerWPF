@@ -29,6 +29,12 @@ namespace WASAPINETCore.Audio
             _waveProvider.ResetStream();
         }
 
+        public void Dispose()
+        {
+            _waveProvider.Dispose();
+            _device.Dispose();
+        }
+
         public bool IsPlaying
         {
             get

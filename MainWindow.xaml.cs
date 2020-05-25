@@ -136,8 +136,10 @@ namespace WASAPINETCore
         {
             if (_player.IsPlaying || _player.IsPaused)
             {
-                _timer.Stop();
                 _player.Stop();
+                _player.Dispose();
+                _timer.Stop();
+              
             }
         }
 
