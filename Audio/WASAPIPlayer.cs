@@ -6,6 +6,7 @@ using NAudio;
 using NAudio.FileFormats;
 using NAudio.CoreAudioApi.Interfaces;
 using NAudio.Wave;
+using NAudio.Dsp;
 using System.Runtime.InteropServices.ComTypes;
 using System.Diagnostics;
 
@@ -13,9 +14,14 @@ namespace WASAPINETCore.Audio
 {
     class WASAPIPlayer 
     {
+        private AudioFileReader _reader = null;
+        private WASAPISampleAggregator _aggregator = null;
         private WasapiOut _device = null;
         public event EventHandler PlaybackStopped;
-        private WASAPIBufferedWaveProvider _waveProvider;
+        public WaveFormat WaveFormat = null;
+
+        public event EventHandler<FftEventArgs> FftCalculated;
+        public event EventHandler<MaxSampleEventArgs> MaximumCalculated;
 
         private void OnPlaybackStopped()
         {
@@ -26,12 +32,12 @@ namespace WASAPINETCore.Audio
         private void _device_PlaybackStopped(object sender, StoppedEventArgs e)
         {
             OnPlaybackStopped();
-            _waveProvider.ResetStream();
+            _aggregator.Reset();
         }
 
         public void Dispose()
         {
-            _waveProvider.Dispose();
+            _reader.Dispose();
             _device.Dispose();
         }
 
@@ -71,50 +77,35 @@ namespace WASAPINETCore.Audio
         {
             if (_device != null)
             {
+                _aggregator.Reset();
+                _reader.Dispose();
                 _device.Dispose();
-                _device = null;
+                WaveFormat = null;
             }
 
-            if (_waveProvider != null)
-            {
-                _waveProvider.Dispose();
-            }
             try
             {
-                WaveStream wStream = null;
-                if (file.ToLower().EndsWith("mp3"))
-                {
-                    wStream = new Mp3FileReader(file);
-                }
-                else if (file.ToLower().EndsWith("wav"))
-                {
-                    wStream = new WaveFileReader(file);
-                }
-                else
-                    throw new Exception("Invalid file type: only mp3 and wav are supported.");
-
+                _reader = new AudioFileReader(file);
                 
-                _waveProvider = new WASAPIBufferedWaveProvider(wStream);
+                WaveFormat = _reader.WaveFormat;
+                _aggregator = new WASAPISampleAggregator(_reader, 1024);
+                _aggregator.NotificationCount = _reader.WaveFormat.SampleRate / 100;
+                _aggregator.PerformFFT = true;
+                _aggregator.FftCalculated += (s, a) => FftCalculated?.Invoke(this, a);
+                _aggregator.MaximumCalculated += (s, a) => MaximumCalculated?.Invoke(this, a);
 
-                if (_waveProvider != null)
-                {
+                _device = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 200);
+                _device.PlaybackStopped += _device_PlaybackStopped;
+                _device.Init(_aggregator);
 
-
-                    _device = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 50);
-                    _device.PlaybackStopped += _device_PlaybackStopped;
-                    _device.Init(_waveProvider);
-
-                    FileDetails fd = ReadTagsFromFile(file);
-                    fd.StreamOK = true;
-                    return fd;
-                }
+                FileDetails fd = ReadTagsFromFile(file);
+                fd.StreamOK = true;
+                return fd;
             }
             catch(Exception ex)
             {
                 throw new Exception(ex.Message);
             }
-
-            return null;
         }
 
         private FileDetails ReadTagsFromFile(string file)
@@ -135,7 +126,16 @@ namespace WASAPINETCore.Audio
         {
             if (!IsPlaying)
             {
-                _device.Play();
+                if(IsPaused)
+                    _device.Play();
+                else
+                {
+                    if (_reader != null)
+                    {
+                        _reader.Position = 0;
+                        _device.Play();
+                    }
+                }
             }
         }
     }

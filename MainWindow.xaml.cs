@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using NAudio.Dsp;
 using NAudio.Wave;
 using OpenTK;
 using OpenTK.Graphics;
@@ -32,7 +33,6 @@ namespace WASAPINETCore
         // Audio fields:
         private WASAPIPlayer _player = null;
         private DispatcherTimer _timer;
-        private LomontFFT _fft;
         private long _lastUpdate = 0;
 
         // OpenGL fields:
@@ -53,17 +53,29 @@ namespace WASAPINETCore
 
             _player = new WASAPIPlayer();
             _player.PlaybackStopped += _player_PlaybackStopped;
+            _player.FftCalculated += _player_FftCalculated;
+            _player.MaximumCalculated += _player_MaximumCalculated;
 
             _timer = new DispatcherTimer(DispatcherPriority.Normal);
             _timer.Interval = new TimeSpan(0, 0, 0, 0, 16);
             _timer.Tick += _ticker_Tick;
 
-            _fft = new LomontFFT();
-            _fft.A = 0;
-            _fft.B = 1;
         }
 
-        
+        private void _player_MaximumCalculated(object sender, MaxSampleEventArgs e)
+        {
+            
+        }
+
+        private void _player_FftCalculated(object sender, FftEventArgs e)
+        {
+            BufferingResults.Data = e.Result;
+            BufferingResults.Count = e.Result.Length;
+            BufferingResults.Format = _player.WaveFormat;
+            BufferingResults.Timestamp = (uint)Global.Watch.ElapsedMilliseconds;
+            //Console.WriteLine("!");
+        }
+
         private void _ticker_Tick(object sender, EventArgs e)
         {
             if (_player.IsPlaying)
@@ -73,20 +85,17 @@ namespace WASAPINETCore
                     if(_lastUpdate <= BufferingResults.Timestamp)
                     {
                         int c = BufferingResults.Count;
-                        byte[] data = BufferingResults.Data;
-                        WaveFormat wf = BufferingResults.Format;
+                        double[] data = BufferingResults.Data;
+                        double[] fftResult = new double[BufferingResults.Data.Length];
 
-                        double[] dData = AudioConverter.ConvertToMonoDoubleFFTArray(data, wf);
-                        _fft.FFT(dData, true);
-
-                        double[] fftResult = new double[dData.Length / 2];
-
-                        for (int i = 0, j = 0; i < dData.Length / 2; i += 2, j += 2)
+                        for (int i = 0, j = 0; i < data.Length; i += 2, j += 2)
                         {
-                            fftResult[j] = i * wf.SampleRate / 2.0 / (dData.Length / 2);
-                            fftResult[j + 1] = Math.Sqrt(dData[i] * dData[i] + dData[i + 1] * dData[i + 1]);
+                            fftResult[j] = i * BufferingResults.Format.SampleRate / 2.0 / (data.Length);
+                            fftResult[j + 1] = Math.Sqrt(data[i] * data[i] + data[i + 1] * data[i + 1]);
                         }
                         _renderer.SetFFTData(fftResult);
+                        //Console.WriteLine("max: " + fftResult[fftResult.Length - 2]);
+                        //Console.WriteLine("min: " + fftResult[2]);
                     }
                     else
                     {

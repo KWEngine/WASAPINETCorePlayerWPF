@@ -28,8 +28,8 @@
                 <RowDefinition Height="*"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
-            <Button x:Name="btnPlay" Grid.ColumnSpan="2" Content="Play" Margin="0,0,0,0" Padding="16,8,16,8" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0" Click="btnPlay_Click"/>
-            <Button x:Name="btnPause" Grid.ColumnSpan="2" Content="Pause" Margin="0,0,0,0" Padding="16,8,16,8" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="2" Grid.Row="0" Click="btnPause_Click"/>
+            <Button x:Name="btnPlay" Grid.ColumnSpan="2" Content="Play" Margin="0,0,0,0" Padding="16,8,16,8" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0" Click="btnPlay_Click" IsEnabled="False"/>
+            <Button x:Name="btnPause" Grid.ColumnSpan="2" Content="Pause" Margin="0,0,0,0" Padding="16,8,16,8" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="2" Grid.Row="0" Click="btnPause_Click" IsEnabled="False"/>
             <TextBox x:Name="tbFilename" Text="" Margin="8,8,8,8" Padding="16,8,16,8" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" IsEnabled="False"></TextBox>
             <Button x:Name="btnOpen" Grid.ColumnSpan="1" Content="Open File" Margin="0,0,0,0" Padding="16,8,16,8" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="3" Grid.Row="1" Click="btnOpen_Click"/>
         </Grid>

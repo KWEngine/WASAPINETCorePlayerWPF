@@ -1,10 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon />
+    <StartupObject>WASAPINETCore.App</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +30,7 @@
     </Reference>
     <Reference Include="OpenTK.GLControl">
       <HintPath>OpenTK.GLControl.dll</HintPath>
+      <Private>true</Private>
     </Reference>
   </ItemGroup>
 
