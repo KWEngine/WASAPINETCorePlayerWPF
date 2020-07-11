@@ -31,12 +31,12 @@ namespace WASAPINETCore.OpenGL
         public bool ReduceCurrentFFTData()
         {
             bool result = false;
-            if(_fft != null)
+            if (_fft != null)
             {
                 for (int i = 0; i < _fft.Length; i += 2)
                 {
-                    _fft[i + 1] *= 0.75;
-                    if(!result && Math.Round(_fft[i + 1], 2) > 0)
+                    _fft[i + 1] *= 0.95;
+                    if (!result && Math.Round(_fft[i + 1], 2) > 0)
                     {
                         result = true;
                     }
@@ -113,18 +113,74 @@ namespace WASAPINETCore.OpenGL
             return address;
         }
 
-        private int numHeights = 510;
+        
 
-        private void PrepareDataForDrawing(float width, out float step, out int numberOfTotalBins, out float[] heights, out float beginning )
+        private readonly float[,] Hertzlist = 
+            {
+                {0,35},
+                {35,60},
+                {60,80},
+                {80,100},
+                {100,125},
+                {125,150},
+                {150,200},
+                {200,260},
+                {260,320},
+                {320,400},
+                {400,480},
+                {480,560},
+                {560,680},
+                {680,820},
+                {820,1000},
+                {1000,1500},
+                {1500,3500},
+                {3500,6000},
+                {6000,12000},
+                {12000,22000}
+            };
+
+        private int numHeights = 20;
+
+        private void PrepareDataForDrawing(float width, out float step, out float[] heights, out float beginning )
+        {
+            heights = new float[numHeights];
+            step = width / (numHeights - 0);
+            beginning = (-width / 2f) + (step / 2f);
+
+            if (_fft != null)
+            {
+                int index = 2;
+                float sum = 0;
+                int binsAccumulated = 0;
+                for(int i = 0; i < numHeights; )
+                {
+                    float min = Hertzlist[i, 0];
+                    float max = Hertzlist[i, 1];
+                    if(_fft[index] >= min && _fft[index] < max)
+                    {
+                        sum += 100 + 20f * (float)Math.Log10(_fft[index + 1] / (_fft.Length / 2 - 2));
+                        binsAccumulated++;
+                        index += 2;
+                    }
+                    else
+                    {
+                        heights[i++] = Math.Clamp(sum / (binsAccumulated == 0 ? 1 : binsAccumulated), 0, 100);
+                        binsAccumulated = 0;
+                        sum = 0;
+                    }
+                }
+            }
+        }
+
+        private void PrepareDataForDrawingOld(float width, out float step, out float[] heights, out float beginning)
         {
             step = 0;
             heights = new float[numHeights];
-            numberOfTotalBins = 0;
             beginning = 0;
 
             if (_fft != null)
             {
-                numberOfTotalBins = _fft.Length / 2 - 2;
+                int numberOfTotalBins = _fft.Length / 2 - 2;
                 step = width / (numHeights - 0);
                 beginning = (-width / 2f) + (step / 2f);
                 int numberOfBinsPerSuperbin = numberOfTotalBins / numHeights;
@@ -140,7 +196,7 @@ namespace WASAPINETCore.OpenGL
                     currentSum += h;
                     if (j > 0 && j % numberOfBinsPerSuperbin == 0)
                     {
-                        heights[b++] = Math.Clamp(currentSum / numberOfBinsPerSuperbin, 0f, 100f); 
+                        heights[b++] = Math.Clamp(currentSum / numberOfBinsPerSuperbin, 0f, 100f);
                         currentSum = 0;
                         if (b >= numHeights)
                         {
@@ -153,7 +209,7 @@ namespace WASAPINETCore.OpenGL
 
         public void Draw(ref Matrix4 viewProjection, float width, float height)
         {
-            PrepareDataForDrawing(width, out float step, out int numberOfBins, out float[] heights, out float beginning);
+            PrepareDataForDrawing(width, out float step, out float[] heights, out float beginning);
 
             GL.Uniform1(_uniformBinWidth, 100f / (numHeights + 1f));
             GL.Uniform1(_uniformStep, step);

@@ -94,8 +94,6 @@ namespace WASAPINETCore
                             fftResult[j + 1] = Math.Sqrt(data[i] * data[i] + data[i + 1] * data[i + 1]);
                         }
                         _renderer.SetFFTData(fftResult);
-                        //Console.WriteLine("max: " + fftResult[fftResult.Length - 2]);
-                        //Console.WriteLine("min: " + fftResult[2]);
                     }
                     else
                     {
