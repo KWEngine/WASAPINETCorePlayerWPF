@@ -1,11 +1,8 @@
-﻿using NAudio.Wave;
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics.OpenGL4;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Windows.Documents;
 
 namespace WASAPINETCore.OpenGL
 {
@@ -116,36 +113,36 @@ namespace WASAPINETCore.OpenGL
             return address;
         }
 
-        private void PrepareDataForDrawing(float width, out float step, out int numberOfBins, out float[] heights, out float beginning )
+        private int numHeights = 510;
+
+        private void PrepareDataForDrawing(float width, out float step, out int numberOfTotalBins, out float[] heights, out float beginning )
         {
             step = 0;
-            heights = new float[20];
-            numberOfBins = 0;
+            heights = new float[numHeights];
+            numberOfTotalBins = 0;
             beginning = 0;
 
             if (_fft != null)
             {
-                numberOfBins = _fft.Length / 2 - 2;
-                int bins2 = numberOfBins * 2;
-                step = width / (20 - 0);
+                numberOfTotalBins = _fft.Length / 2 - 2;
+                step = width / (numHeights - 0);
                 beginning = (-width / 2f) + (step / 2f);
-                int binsPerSuperBin = numberOfBins / 20;
-                if (binsPerSuperBin < 1)
+                int numberOfBinsPerSuperbin = numberOfTotalBins / numHeights;
+                if (numberOfBinsPerSuperbin < 1)
                 {
                     return;
                 }
-                    
 
                 float currentSum = 0;
-                for (int i = 2, j = 0, b = 0; i < bins2; i += 2, j++)
+                for (int i = 2, j = 0, b = 0; i < _fft.Length; i += 2, j++)
                 {
-                    float h = 100 + (20f * (float)Math.Log10(_fft[i + 1] / (numberOfBins * 0.5f)));
+                    float h = 100 + (20f * (float)Math.Log10(_fft[i + 1] / (numberOfTotalBins)));
                     currentSum += h;
-                    if (j > 0 && j % binsPerSuperBin == 0)
+                    if (j > 0 && j % numberOfBinsPerSuperbin == 0)
                     {
-                        heights[b++] = Math.Clamp(currentSum / binsPerSuperBin, 0f, 100f); 
+                        heights[b++] = Math.Clamp(currentSum / numberOfBinsPerSuperbin, 0f, 100f); 
                         currentSum = 0;
-                        if (b >= 20)
+                        if (b >= numHeights)
                         {
                             break;
                         }
@@ -158,15 +155,15 @@ namespace WASAPINETCore.OpenGL
         {
             PrepareDataForDrawing(width, out float step, out int numberOfBins, out float[] heights, out float beginning);
 
-            GL.Uniform1(_uniformBinWidth, 100f / (20f + 1f));
+            GL.Uniform1(_uniformBinWidth, 100f / (numHeights + 1f));
             GL.Uniform1(_uniformStep, step);
             GL.Uniform1(_uniformWindowHeight, -height / 2f);
             GL.Uniform1(_uniformBinOffset, beginning);
             GL.UniformMatrix4(_uniformVP, false, ref viewProjection);
-            GL.Uniform1(_uniformHeight, 20, heights);
+            GL.Uniform1(_uniformHeight, numHeights, heights);
 
             GL.BindVertexArray(_quad.GetId());
-            GL.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, numberOfBins);
+            GL.DrawArraysInstanced(PrimitiveType.Quads, 0, 4, numHeights);
             GL.BindVertexArray(0);
             
         }

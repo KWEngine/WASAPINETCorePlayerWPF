@@ -201,6 +201,7 @@ namespace WASAPINETCore
             if(result != null && result == true)
             {
                 tbFilename.Text = fd.FileName;
+                _player.Stop();
                 FileDetails fileLoaded = _player.OpenWaveFile(tbFilename.Text.Trim());
                 if (fileLoaded != null)
                 {

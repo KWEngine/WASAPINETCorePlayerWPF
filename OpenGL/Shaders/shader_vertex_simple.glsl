@@ -6,7 +6,7 @@ out		float vHeight;
 
 uniform mat4 uVP;
 uniform int uBinId;
-uniform float uHeight[20];
+uniform float uHeight[510];
 uniform float uWindowHeight;
 uniform float uBinWidth;
 uniform float uBinOffset;
