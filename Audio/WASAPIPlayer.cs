@@ -88,7 +88,7 @@ namespace WASAPINETCore.Audio
                 _reader = new AudioFileReader(file);
                 
                 WaveFormat = _reader.WaveFormat;
-                _aggregator = new WASAPISampleAggregator(_reader, 2048);
+                _aggregator = new WASAPISampleAggregator(_reader, 1024);
                 _aggregator.NotificationCount = _reader.WaveFormat.SampleRate / 100;
                 _aggregator.PerformFFT = true;
                 _aggregator.FftCalculated += (s, a) => FftCalculated?.Invoke(this, a);

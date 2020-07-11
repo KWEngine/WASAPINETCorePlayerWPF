@@ -97,7 +97,7 @@ namespace WASAPINETCore
                     }
                     else
                     {
-                        _renderer.ReduceCurrentFFTData();
+                        _renderer.ReduceCurrentFFTData(true);
                     }
 
                     glControl.Invalidate();
@@ -105,7 +105,7 @@ namespace WASAPINETCore
             }
             else
             {
-                bool result = _renderer.ReduceCurrentFFTData();
+                bool result = _renderer.ReduceCurrentFFTData(false);
                 glControl.Invalidate();
                 if (!result)
                 {

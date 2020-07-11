@@ -28,14 +28,22 @@ namespace WASAPINETCore.OpenGL
             _fft = data;
         }
 
-        public bool ReduceCurrentFFTData()
+        private Random _random = new Random();
+
+        public bool ReduceCurrentFFTData(bool stillPlaying = true)
         {
             bool result = false;
             if (_fft != null)
             {
                 for (int i = 0; i < _fft.Length; i += 2)
                 {
-                    _fft[i + 1] *= 0.95;
+                    if(stillPlaying)
+                    {
+                        _fft[i + 1] *= 0.91;
+                    }
+                        
+                    else
+                        _fft[i + 1] *= 0.8;
                     if (!result && Math.Round(_fft[i + 1], 2) > 0)
                     {
                         result = true;
@@ -117,26 +125,26 @@ namespace WASAPINETCore.OpenGL
 
         private readonly float[,] Hertzlist = 
             {
-                {0,35},
-                {35,60},
-                {60,80},
-                {80,100},
-                {100,125},
-                {125,150},
-                {150,200},
-                {200,260},
+                {0,45},
+                {45,87},
+                {87,130},
+                {130,173},
+                {173,216},
+                {216,260},
                 {260,320},
-                {320,400},
-                {400,480},
-                {480,560},
-                {560,680},
-                {680,820},
-                {820,1000},
-                {1000,1500},
-                {1500,3500},
-                {3500,6000},
-                {6000,12000},
-                {12000,22000}
+                {320,350},
+                {350,460},
+                {460,700},
+                {700,900},
+                {900,1250},
+                {1250,1700},
+                {1700,2800},
+                {2800,5000},
+                {5000,7500},
+                {7500,11000},
+                {11000,14000},
+                {14000,17500},
+                {17500,22000}
             };
 
         private int numHeights = 20;
@@ -144,11 +152,13 @@ namespace WASAPINETCore.OpenGL
         private void PrepareDataForDrawing(float width, out float step, out float[] heights, out float beginning )
         {
             heights = new float[numHeights];
+            
             step = width / (numHeights - 0);
             beginning = (-width / 2f) + (step / 2f);
 
             if (_fft != null)
             {
+                float totalBinCount = (_fft.Length - 4f) / 2f;
                 int index = 2;
                 float sum = 0;
                 int binsAccumulated = 0;
@@ -158,13 +168,15 @@ namespace WASAPINETCore.OpenGL
                     float max = Hertzlist[i, 1];
                     if(_fft[index] >= min && _fft[index] < max)
                     {
-                        sum += 100 + 20f * (float)Math.Log10(_fft[index + 1] / (_fft.Length / 2 - 2));
+                        sum += (float)_fft[index + 1];
                         binsAccumulated++;
                         index += 2;
                     }
                     else
                     {
-                        heights[i++] = Math.Clamp(sum / (binsAccumulated == 0 ? 1 : binsAccumulated), 0, 100);
+                        float a = sum / (binsAccumulated == 0 ? 1 : binsAccumulated) / totalBinCount;
+                        float b = 20f * (float)Math.Log10(a);
+                        heights[i++] = Math.Clamp(100 + b, 0, 100);
                         binsAccumulated = 0;
                         sum = 0;
                     }
